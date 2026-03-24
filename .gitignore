@@ -1,3 +1,9 @@
+syncspec.dot
+syncspec.json
+syncspec.log
+.python-version
+uv.lock
+specs/.obsidian/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
