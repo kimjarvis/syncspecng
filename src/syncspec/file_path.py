@@ -1,6 +1,7 @@
 from dataclasses import dataclass
+from pathlib import Path
 
 @dataclass
-class InputFileParameter:
+class FilePath:
+    path: Path
     text: str
-    file: str

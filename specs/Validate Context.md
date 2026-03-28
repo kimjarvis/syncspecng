@@ -1,3 +1,4 @@
+## Import 
 
 Import `Context` from file `context.py`
 
@@ -42,7 +43,9 @@ class Stop:
 ```
 <!-- {==} -->
 
-### Implement a unary function
+## Implement a unary function
+
+In the file `src/syncspec/validate_context.py`.
 
 Define a closure factory with a unary function with signature:
 
@@ -77,9 +80,9 @@ If verification succeeds:
 ### Note that
 
 State is modified by an external process. 
-### Log warnings and errors
 
 <!-- {= "source": "format_error", "head": 1, "tail": 1 =} -->
+## Log warnings and errors
 
 Import logging.
 
