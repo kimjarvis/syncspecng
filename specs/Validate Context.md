@@ -64,10 +64,12 @@ Otherwise:
 
 Verify that:
 
+<!-- {="source": "delimiter assumptions", "head": 2, "tail": 2=} -->
 - Delimiters are not empty strings.
 - Delimiters are distinct, e.g., they will not be `{{` and `{{`.
 - Delimiters do not overlap structurally.  Open cannot be a sub-string of close and vice versa. e.g., they will not be `{{` and `{`. 
 - Delimiters do not contain newlines.
+<!-- {==} -->
 
 If verification fails:
 - Do not raise an exception.
@@ -88,7 +90,8 @@ Import logging.
 
 Import the function with this signature from file `utilities.py`:
 ```python
-def format_error(message: str, name: str, line_number: int) -> str:
+from pathlib import Path
+def format_error(message: str, path: Path, line_number: int) -> str:
 ```
 
 <!-- {==} -->

@@ -1,7 +1,8 @@
-def format_error(message: str, name: str, line_number: int) -> str:
+from pathlib import Path
+def format_error(message: str, path: Path, line_number: int) -> str:
     return (
         f"{message}\n"
         f"        Line: {line_number}\n"
-        f"        File: {name}\n\n"
+        f"        File: {path}\n\n"
     )
 

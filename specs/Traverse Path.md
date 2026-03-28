@@ -95,7 +95,8 @@ Import logging.
 
 Import the function with this signature from file `utilities.py`:
 ```python
-def format_error(message: str, name: str, line_number: int) -> str:
+from pathlib import Path
+def format_error(message: str, path: Path, line_number: int) -> str:
 ```
 <!-- {==} -->
 
