@@ -1,68 +1,100 @@
-import pytest
 import json
-import os
-from syncspec.cli import validate_delimiters, validate_file_path, main
+import sys
+from pathlib import Path
+
+import pytest
+from syncspec.cli import main
 
 
-@pytest.mark.parametrize(
-    "open_d, close_d, expected_error",
-    [
-        ("{{", "}}", None),
-        ("", "}}", "empty"),
-        ("{{", "", "empty"),
-        ("{{\n", "}}", "newlines"),
-        ("{{", "{{", "distinct"),
-        ("{", "{{", "overlap"),
-        ("{{", "{", "overlap"),
-    ],
-)
-def test_validate_delimiters(open_d, close_d, expected_error):
-    if expected_error:
-        with pytest.raises(ValueError, match=expected_error):
-            validate_delimiters(open_d, close_d)
+@pytest.mark.parametrize("suffix, should_fail", [(".json", False), (".txt", True)])
+def test_keyvalue_file_suffix(tmp_path, monkeypatch, suffix, should_fail):
+    (tmp_path / "input").mkdir()
+    kv_file = tmp_path / f"test{suffix}"
+    kv_file.write_text("{}")
+    args = ["cli.py", str(tmp_path / "input"), str(kv_file)]
+    monkeypatch.setattr(sys, "argv", args)
+    monkeypatch.setattr("syncspec.cli.machine", lambda ctx: None)
+    if should_fail:
+        with pytest.raises(SystemExit) as exc_info:
+            main()
+        assert exc_info.value.code == 1
     else:
-        validate_delimiters(open_d, close_d)
+        with pytest.raises(SystemExit) as exc_info:
+            main()
+        assert exc_info.value.code == 0
 
 
-@pytest.mark.parametrize(
-    "path, suffix, must_exist, expected_error",
-    [
-        ("test.log", ".log", False, None),
-        ("test.txt", ".log", False, "end with"),
-        ("test.md", ".md", True, "does not exist"),
-    ],
-)
-def test_validate_file_path(tmp_path, path, suffix, must_exist, expected_error):
-    if expected_error and "exists" in expected_error:
-        path = str(tmp_path / "missing.md")
-
-    if expected_error:
-        with pytest.raises(ValueError, match=expected_error):
-            validate_file_path(path, suffix, must_exist)
+@pytest.mark.parametrize("exists", [True, False])
+def test_input_path_directory(tmp_path, monkeypatch, exists):
+    kv_file = tmp_path / "test.json"
+    kv_file.write_text("{}")
+    if exists:
+        (tmp_path / "input").mkdir()
+        path_arg = str(tmp_path / "input")
     else:
-        if must_exist:
-            p = tmp_path / path
-            p.write_text("content")
-            path = str(p)
-        validate_file_path(path, suffix, must_exist)
+        path_arg = str(tmp_path / "nonexistent")
+    args = ["cli.py", path_arg, str(kv_file)]
+    monkeypatch.setattr(sys, "argv", args)
+    monkeypatch.setattr("syncspec.cli.machine", lambda ctx: None)
+    if not exists:
+        with pytest.raises(SystemExit) as exc_info:
+            main()
+        assert exc_info.value.code == 1
+    else:
+        with pytest.raises(SystemExit) as exc_info:
+            main()
+        assert exc_info.value.code == 0
 
 
-def test_main_invalid_json(tmp_path):
-    md_file = tmp_path / "input.md"
-    md_file.write_text("content")
-    json_file = tmp_path / "data.json"
-    json_file.write_text("invalid json")
-
+def test_invalid_json(tmp_path, monkeypatch):
+    (tmp_path / "input").mkdir()
+    bad_json = tmp_path / "bad.json"
+    bad_json.write_text("{invalid}")
+    args = ["cli.py", str(tmp_path / "input"), str(bad_json)]
+    monkeypatch.setattr(sys, "argv", args)
     with pytest.raises(SystemExit) as exc_info:
-        main([str(md_file), "--keyvalue_file", str(json_file)])
+        main()
     assert exc_info.value.code == 1
 
 
-def test_main_validation_error(tmp_path):
-    md_file = tmp_path / "input.txt"  # Wrong suffix
-    md_file.write_text("content")
-    json_file = tmp_path / "data.json"
-    json_file.write_text("{}")
+def test_logging_to_file(tmp_path, monkeypatch):
+    (tmp_path / "input").mkdir()
+    kv_file = tmp_path / "test.json"
+    kv_file.write_text("{}")
+    log_file = tmp_path / "test.log"
+    args = ["cli.py", str(tmp_path / "input"), str(kv_file), "--log_file", str(log_file)]
+    monkeypatch.setattr(sys, "argv", args)
+    monkeypatch.setattr("syncspec.cli.machine", lambda ctx: None)
+    with pytest.raises(SystemExit) as exc_info:
+        main()
+    assert exc_info.value.code == 0
+    assert log_file.exists()
 
-    exit_code = main([str(md_file), "--keyvalue_file", str(json_file)])
-    assert exit_code == 1
+
+def test_prefix_defaults(tmp_path, monkeypatch):
+    (tmp_path / "input").mkdir()
+    kv_file = tmp_path / "test.json"
+    kv_file.write_text("{}")
+    args = ["cli.py", str(tmp_path / "input"), str(kv_file)]
+    monkeypatch.setattr(sys, "argv", args)
+    monkeypatch.setattr("syncspec.cli.machine", lambda ctx: None)
+    with pytest.raises(SystemExit) as exc_info:
+        main()
+    assert exc_info.value.code == 0
+
+
+def test_help_message(tmp_path, monkeypatch, capsys):
+    args = ["cli.py", "--help"]
+    monkeypatch.setattr(sys, "argv", args)
+    with pytest.raises(SystemExit) as exc_info:
+        main()
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert "open_delimiter" in captured.out
+    assert "close_delimiter" in captured.out
+    assert "log_file" in captured.out
+    assert "output_path_prefix" in captured.out
+    assert "import_path_prefix" in captured.out
+    assert "export_path_prefix" in captured.out
+    assert "input_path" in captured.out
+    assert "keyvalue_file" in captured.out
