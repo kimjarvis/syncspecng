@@ -67,6 +67,7 @@ Define a closure factory with a unary function with signature:
 ```python
 def make_traverse_path(context: Context):
     def traverse_path(fact: Dummy) -> Union[FilePath, Stop]:
+
 ```
 <!-- {==} -->
 

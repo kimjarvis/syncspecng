@@ -54,6 +54,7 @@ Define a closure factory with a unary function with signature:
 def make_validate_context(context: Context):
 	state = {'active': True}
     def validate_context(fact: Dummy) -> Union[Dummy, Stop]:
+
 ```
 <!-- {==} -->
 

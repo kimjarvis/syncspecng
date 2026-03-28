@@ -68,6 +68,7 @@ Define a closure factory with a unary function with signature:
 ```python
 def make_fragment_text(context: Context):
     def fragment_text(fact: FilePath) -> Union[List[Fragment],Stop]:
+
 ```
 <!-- {==} -->
 
@@ -115,7 +116,7 @@ Assume:
 <!-- {="include": "delimiter assumptions", "head": 2, "tail": 2=} -->
 - Delimiters are not empty strings.
 - Delimiters are distinct, e.g., they will not be `{{` and `{{`.
-- Delimiters do not overlap structurally.  Open cannot be a sub-string of close and vice versa. e.g., they will not be `{{` and `{`. - Delimiters do not contain newlines.
+- Delimiters do not overlap structurally.  Open cannot be a sub-string of close and vice versa. e.g., they will not be `{{` and `{`. - Delimiters do not overlap structurally.  Open cannot be a sub-string of close and vice versa. e.g., they will not be `{{` and `{`. - Delimiters do not overlap structurally.  Open cannot be a sub-string of close and vice versa. e.g., they will not be `{{` and `{`. - Delimiters do not overlap structurally.  Open cannot be a sub-string of close and vice versa. e.g., they will not be `{{` and `{`. - Delimiters do not overlap structurally.  Open cannot be a sub-string of close and vice versa. e.g., they will not be `{{` and `{`. - Delimiters do not overlap structurally.  Open cannot be a sub-string of close and vice versa. e.g., they will not be `{{` and `{`. - Delimiters do not overlap structurally.  Open cannot be a sub-string of close and vice versa. e.g., they will not be `{{` and `{`. - Delimiters do not contain newlines.
 <!-- {==} -->
 
 <!-- {="source": "line_numbers", "head": 2, "tail": 2=} -->
