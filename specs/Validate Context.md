@@ -31,6 +31,16 @@ class Dummy:
 ```
 <!-- {==} -->
 
+<!-- {="import": "src/syncspec/stop.py", "head": 2, "tail": 2=} -->
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Stop:
+    pass
+
+```
+<!-- {==} -->
 
 ### Implement a unary function
 
@@ -39,16 +49,34 @@ Define a closure factory with a unary function with signature:
 <!-- {="source": "validate_context", "head": 2, "tail": 2=} -->
 ```python
 def make_validate_context(context: Context):
-    def validate_context(param: Dummy) -> Dummy:
-
+	state = {'active': True}
+    def validate_context(fact: Dummy) -> Union[Dummy, Stop]:
 ```
 <!-- {==} -->
-### Verify that:
+
+If `state["active"]==False`:
+- Return an object of type `Stop`.  
+
+Otherwise:
+
+Verify that:
 
 - Delimiters are not empty strings.
 - Delimiters are distinct, e.g., they will not be `{{` and `{{`.
 - Delimiters do not overlap structurally.  Open cannot be a sub-string of close and vice versa. e.g., they will not be `{{` and `{`. 
 - Delimiters do not contain newlines.
+
+If verification fails:
+- Do not raise an exception.
+- Set `state["active"]=False`
+- Log an error with an informative message using `format_error.
+- Return an object of type `Stop`.  
+
+If verification succeeds:
+- Return an object of type `Dummy`.
+### Note that
+
+State is modified by an external process. 
 ### Log warnings and errors
 
 <!-- {= "source": "format_error", "head": 1, "tail": 1 =} -->

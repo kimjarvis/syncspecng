@@ -1,73 +1,39 @@
+import inspect
 import logging
-from typing import Callable
+from typing import Union
 
 from syncspec.context import Context
-from syncspec.utilities import format_error
 from syncspec.dummy import Dummy
+from syncspec.stop import Stop
+from syncspec.utilities import format_error
+
+logger = logging.getLogger(__name__)
+
 
 def make_validate_context(context: Context):
-    def validate_context(param: Dummy) -> Dummy:
-        open_delim = context.open_delimiter
-        close_delim = context.close_delimiter
+    state = {'active': True, 'last': False}
 
-        # Validate Unicode strings
-        try:
-            open_delim.encode("utf-8")
-            close_delim.encode("utf-8")
-        except UnicodeEncodeError:
-            logging.error(
-                format_error(
-                    "Delimiters must be valid Unicode strings.",
-                    "Context",
-                    0,
-                )
-            )
-            raise ValueError("Invalid Unicode in delimiters")
+    def validate_context(param: Dummy) -> Union[Dummy, Stop]:
+        if not state['active']:
+            return Stop()
 
-        # Not empty
-        if not open_delim or not close_delim:
-            logging.error(
-                format_error(
-                    "Delimiters must not be empty strings.",
-                    "Context",
-                    0,
-                )
-            )
-            raise ValueError("Empty delimiter")
+        od, cd = context.open_delimiter, context.close_delimiter
+        error = None
 
-        # Distinct
-        if open_delim == close_delim:
-            logging.error(
-                format_error(
-                    "Open and close delimiters must be distinct.",
-                    "Context",
-                    0,
-                )
-            )
-            raise ValueError("Identical delimiters")
+        if not od or not cd:
+            error = "Delimiters cannot be empty"
+        elif od == cd:
+            error = "Delimiters must be distinct"
+        elif od in cd or cd in od:
+            error = "Delimiters cannot overlap structurally"
+        elif '\n' in od or '\n' in cd:
+            error = "Delimiters cannot contain newlines"
 
-        # No structural overlap
-        if open_delim in close_delim or close_delim in open_delim:
-            logging.error(
-                format_error(
-                    "Delimiters must not be substrings of each other.",
-                    "Context",
-                    0,
-                )
-            )
-            raise ValueError("Overlapping delimiters")
+        if error:
+            state['active'] = False
+            logger.error(format_error(error, __name__, inspect.currentframe().f_lineno))
+            return Stop()
 
-        # No newlines (covers all common newline forms)
-        if "\n" in open_delim or "\r" in open_delim or "\n" in close_delim or "\r" in close_delim:
-            logging.error(
-                format_error(
-                    "Delimiters must not contain newline characters.",
-                    "Context",
-                    0,
-                )
-            )
-            raise ValueError("Newline in delimiter")
-
-        return param
+        return Dummy()
 
     return validate_context

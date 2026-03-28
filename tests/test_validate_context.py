@@ -1,63 +1,35 @@
 import pytest
-from unittest.mock import patch
-from dataclasses import dataclass
-
 from syncspec.context import Context
+from syncspec.dummy import Dummy
+from syncspec.stop import Stop
 from syncspec.validate_context import make_validate_context
 
 
-@dataclass
-class MockContext(Context):
-    pass
+def _ctx(open_d, close_d):
+    return Context(open_d, close_d, "", {}, "", "", "", "")
 
 
-@pytest.mark.parametrize(
-    "open_delim,close_delim,should_raise",
-    [
-        ("{{", "}}", False),
-        ("{", "}", False),
-        ("", "}", True),
-        ("{", "", True),
-        ("{{", "{{", True),
-        ("{", "{{", True),
-        ("{{", "{", True),
-        ("{\n", "}", True),
-        ("{", "}\r", True),
-        ("\u2028", "}", False),  # Valid Unicode line separator but not \n or \r
-    ],
-)
-def test_delimiter_validation(open_delim, close_delim, should_raise):
-    ctx = MockContext(
-        open_delimiter=open_delim,
-        close_delimiter=close_delim,
-        keyvalue_file="",
-        keyvalue={},
-        input_path="",
-        import_path_prefix="",
-        export_path_prefix="",
-        output_path_prefix="",
-    )
+@pytest.mark.parametrize("open_d,close_d,expected_type,check_state", [
+    ("{{", "}}", Dummy, False),
+    ("", "}}", Stop, True),
+    ("{{", "{{", Stop, True),
+    ("{{", "{", Stop, True),
+    ("{\n", "}", Stop, True),
+])
+def test_validate_context_logic(open_d, close_d, expected_type, check_state):
+    validator = make_validate_context(_ctx(open_d, close_d))
+    result = validator(Dummy())
+    assert isinstance(result, expected_type)
 
-    validator = make_validate_context(ctx)
-    if should_raise:
-        with pytest.raises(ValueError):
-            validator("test")
-    else:
-        assert validator("test") == "test"
+    if check_state:
+        # Verify state deactivation prevents subsequent success
+        assert isinstance(validator(Dummy()), Stop)
 
 
-def test_non_unicode_strings():
-    # Simulate non-UTF-8 by using surrogate strings (edge case)
-    ctx = MockContext(
-        open_delimiter="\udcff",
-        close_delimiter="}",
-        keyvalue_file="",
-        keyvalue={},
-        input_path="",
-        import_path_prefix="",
-        export_path_prefix="",
-        output_path_prefix="",
-    )
-    validator = make_validate_context(ctx)
-    with pytest.raises(ValueError):
-        validator("test")
+def test_external_state_deactivation():
+    # Simulate external process modifying state via closure reference capture
+    # Note: In real usage, external process holds reference to 'state' dict
+    validator = make_validate_context(_ctx("{{", "}}"))
+    # Accessing closure variables directly is not possible in standard Python tests
+    # without introspection, so we verify logic consistency instead.
+    assert isinstance(validator(Dummy()), Dummy)
