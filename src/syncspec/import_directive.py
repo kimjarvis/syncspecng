@@ -14,7 +14,6 @@ def make_import_directive(context: Context) -> Callable[[Directive], Union[Direc
             return directive
 
         try:
-            print("debug 02")
             import_rel = directive.parameters["import"]
             base_path = Path(context.import_path_prefix).resolve()
             target_path = (base_path / import_rel).resolve()
@@ -32,7 +31,6 @@ def make_import_directive(context: Context) -> Callable[[Directive], Union[Direc
 
             # Read as text (assumes UTF-8)
             file_content = target_path.read_text(encoding="utf-8")
-            print("debug 03",target_path,file_content)
 
             # Validate & apply 'eof'
             eof_val = directive.parameters.get("eof", False)
@@ -61,7 +59,6 @@ def make_import_directive(context: Context) -> Callable[[Directive], Union[Direc
 
             # Replace directive text (variable 'in' renamed to avoid syntax error)
             directive.text = top + file_content + bottom
-            print("debug 04",directive.text)
             return directive
 
         except Exception as exc:

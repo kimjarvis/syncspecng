@@ -16,7 +16,6 @@ from syncspec.source_directive import make_source_directive
 from syncspec.include_directive import make_include_directive
 
 def machine(context: Context) -> None:
-    print("debug 00", context)
 
     validate_context = make_validate_context(context)
     # example_coroutine = make_example_coroutine(context)
@@ -48,6 +47,5 @@ def machine(context: Context) -> None:
 
     initial_facts = [Dummy()]
     final_facts = production(initial_facts, rules)
-    print("debug 01", final_facts)
-    print("debug 02", context)
+    print("debug 00",final_facts)
     pass

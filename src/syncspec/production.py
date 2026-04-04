@@ -24,7 +24,7 @@ def _update_state(fn: Callable, key: str, value: Any) -> None:
 
 
 def production(facts: List[Any], rules: List[Tuple[type, Callable[[Any], Any]]]) -> List[Any]:
-    # print(facts)
+    # print("debug 01",facts)
     for rule_type, fn in rules:
         new_facts: List[Any] = []
         matches = [f for f in facts if isinstance(f, rule_type)]
@@ -44,5 +44,5 @@ def production(facts: List[Any], rules: List[Tuple[type, Callable[[Any], Any]]])
         facts = new_facts
         if any(isinstance(fact, Stop) for fact in facts):
             break
-        # print(facts)
+        # print("debug 02", facts)
     return facts
