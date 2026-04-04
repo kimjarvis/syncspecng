@@ -12,6 +12,8 @@ from syncspec.create_directives import make_create_directives
 from syncspec.import_directive import make_import_directive
 from syncspec.reassemble_text import make_reassemble_text
 from syncspec.defragment_text import make_defragment_text
+from syncspec.source_directive import make_source_directive
+from syncspec.include_directive import make_include_directive
 
 def machine(context: Context) -> None:
     print("debug 00", context)
@@ -26,6 +28,8 @@ def machine(context: Context) -> None:
     import_directive = make_import_directive(context)
     reassemble_text = make_reassemble_text(context)
     defragment_text = make_defragment_text(context)
+    source_directive = make_source_directive(context)
+    include_directive = make_include_directive(context)
 
     rules = build_rules([
         validate_context,
@@ -36,11 +40,14 @@ def machine(context: Context) -> None:
         create_blocks,
         create_directives,
         import_directive,
+        source_directive,
+        include_directive,
         reassemble_text,
-        defragment_text
+        defragment_text,
     ])
 
     initial_facts = [Dummy()]
     final_facts = production(initial_facts, rules)
     print("debug 01", final_facts)
+    print("debug 02", context)
     pass
