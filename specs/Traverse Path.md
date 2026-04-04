@@ -66,7 +66,7 @@ Define a closure factory with a unary function with signature:
 <!-- {="source": "traverse_path", "head": 2, "tail": 2=} -->
 ```python
 def make_traverse_path(context: Context):
-    def traverse_path(fact: Dummy) -> Union[FilePath, Stop]:
+    def traverse_path(fact: Dummy) -> Union[List[Union[FilePath,Stop]], Stop]:
 
 ```
 <!-- {==} -->
@@ -78,16 +78,21 @@ The path may be absolute or relative to the cwd.  When a relative path is given 
 Recursively traverse the directory path `context.input_path`.    
 - Do not follow links.
 
-For each file with the extension `.md` :
-- Read the file content into `FilePath.text` and set the path.
-
-If directory traversal or reading fails:
+If directory traversal fails:
 - Do not raise an exception.
-- Log an error with an informative message using `format_error.
+- Log an error with an informative message using `format_error`.    Use the `line_number` and `path` from the Fragment.
 - Return an object of type `Stop`.
 
-If reading succeeds:
-- Return an object of type `FilePath`.
+For each file with the extension `.md` :
+- Create a `FilePath` object.
+- Read the file content into `FilePath.text` and set the path.
+
+If reading fails:
+- Do not raise an exception.
+- Log an error with an informative message using `format_error`.  Use the `line_number` and `path` from the Fragment.
+- Add an object of type `Stop` to the list.
+
+Return a list of objects of type `FilePath` or `Stop`.
 
 <!-- {= "include": "format_error", "head": 1, "tail": 1 =} -->
 ## Log warnings and errors

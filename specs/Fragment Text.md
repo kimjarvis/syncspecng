@@ -113,11 +113,13 @@ If verification succeeds:
 
 Assume:
 
-<!-- {="include": "delimiter assumptions", "head": 2, "tail": 2=} -->
+<!-- {="include": "delimiter assumptions", "head": 1, "tail": 1=} -->
+
 - Delimiters are not empty strings.
 - Delimiters are distinct, e.g., they will not be `{{` and `{{`.
-- Delimiters do not overlap structurally.  Open cannot be a sub-string of close and vice versa. e.g., they will not be `{{` and `{`. - Delimiters do not overlap structurally.  Open cannot be a sub-string of close and vice versa. e.g., they will not be `{{` and `{`. - Delimiters do not overlap structurally.  Open cannot be a sub-string of close and vice versa. e.g., they will not be `{{` and `{`. - Delimiters do not overlap structurally.  Open cannot be a sub-string of close and vice versa. e.g., they will not be `{{` and `{`. - Delimiters do not overlap structurally.  Open cannot be a sub-string of close and vice versa. e.g., they will not be `{{` and `{`. - Delimiters do not overlap structurally.  Open cannot be a sub-string of close and vice versa. e.g., they will not be `{{` and `{`. - Delimiters do not overlap structurally.  Open cannot be a sub-string of close and vice versa. e.g., they will not be `{{` and `{`. - Delimiters do not contain newlines.
-<!-- {==} -->
+- Delimiters do not overlap structurally.  Open cannot be a sub-string of close and vice versa. e.g., they will not be `{{` and `{`. 
+- Delimiters do not contain newlines.
+ <!-- {==} -->
 
 <!-- {="source": "line_numbers", "head": 2, "tail": 2=} -->
 ### Keep track of line numbers

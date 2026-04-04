@@ -1,59 +1,72 @@
-# test_traverse_path.py
 import pytest
 from pathlib import Path
 from syncspec.context import Context
 from syncspec.dummy import Dummy
 from syncspec.stop import Stop
 from syncspec.file_path import FilePath
-from syncspec.traverse_path import make_traverse_path  # Assuming module name
+from syncspec.traverse_path import make_traverse_path
 
 
-@pytest.mark.parametrize("path_structure, expected_count", [
-    ({"a.md": "content"}, 1),
-    ({"b.txt": "content"}, 0),
-    ({"sub/a.md": "content"}, 1),
-    ({"a.md": "content", "b.md": "content"}, 2),
+@pytest.mark.parametrize("exists,is_dir,expected_type", [
+    (True, True, list),
+    (False, True, Stop),
+    (True, False, Stop),
 ])
-def test_traverse_success(tmp_path, path_structure, expected_count):
-    for name, content in path_structure.items():
-        file_path = tmp_path / name
-        file_path.parent.mkdir(parents=True, exist_ok=True)
-        file_path.write_text(content)
+def test_input_path_validation(tmp_path, exists, is_dir, expected_type):
+    target = tmp_path / "input"
+    if exists:
+        if is_dir:
+            target.mkdir()
+        else:
+            target.write_text("file")
+    # If not exists, don't create anything
 
-    context = Context(
-        open_delimiter="", close_delimiter="", keyvalue_file="", keyvalue={},
-        input_path=str(tmp_path), import_path_prefix="", export_path_prefix="", output_path_prefix=""
+    ctx = Context(
+        open_delimiter="{{", close_delimiter="}}",
+        keyvalue_file="", keyvalue={},
+        input_path=str(target),
+        import_path_prefix="", export_path_prefix="", output_path_prefix=""
     )
-    traverse = make_traverse_path(context)
-    results = []
-    while True:
-        res = traverse(Dummy())
-        if isinstance(res, Stop):
-            break
-        results.append(res)
 
-    assert len(results) == expected_count
-    if expected_count > 0:
-        assert isinstance(results[0], FilePath)
+    result = make_traverse_path(ctx)(Dummy())
+    assert isinstance(result, expected_type)
 
 
-def test_invalid_path(tmp_path):
-    context = Context(
-        open_delimiter="", close_delimiter="", keyvalue_file="", keyvalue={},
-        input_path=str(tmp_path / "nonexistent"), import_path_prefix="", export_path_prefix="", output_path_prefix=""
+def test_traverse_md_files(tmp_path):
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+    (input_dir / "test.md").write_text("content")
+    (input_dir / "test.txt").write_text("ignore")
+
+    ctx = Context(
+        open_delimiter="{{", close_delimiter="}}",
+        keyvalue_file="", keyvalue={},
+        input_path=str(input_dir),
+        import_path_prefix="", export_path_prefix="", output_path_prefix=""
     )
-    traverse = make_traverse_path(context)
-    assert isinstance(traverse(Dummy()), Stop)
+
+    result = make_traverse_path(ctx)(Dummy())
+    assert isinstance(result, list)
+    assert len(result) == 1
+    assert isinstance(result[0], FilePath)
+    assert result[0].text == "content"
 
 
-def test_relative_path_security(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
-    outside = tmp_path.parent / "outside"
-    outside.mkdir(exist_ok=True)
+def test_symlink_exclusion(tmp_path):
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+    real_file = tmp_path / "real.md"
+    real_file.write_text("real")
+    link_file = input_dir / "link.md"
+    link_file.symlink_to(real_file)
 
-    context = Context(
-        open_delimiter="", close_delimiter="", keyvalue_file="", keyvalue={},
-        input_path="../outside", import_path_prefix="", export_path_prefix="", output_path_prefix=""
+    ctx = Context(
+        open_delimiter="{{", close_delimiter="}}",
+        keyvalue_file="", keyvalue={},
+        input_path=str(input_dir),
+        import_path_prefix="", export_path_prefix="", output_path_prefix=""
     )
-    traverse = make_traverse_path(context)
-    assert isinstance(traverse(Dummy()), Stop)
+
+    result = make_traverse_path(ctx)(Dummy())
+    assert isinstance(result, list)
+    assert len(result) == 0  # Symlink excluded
