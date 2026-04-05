@@ -40,7 +40,7 @@ If `--output_path_prefix` is not specified set equal to `input_path`
 If `--import_path_prefix` is not specified set equal to `input_path`
 If `--export_path_prefix` is not specified set equal to `input_path`
  
-<!-- {="import": "src/syncspec/context.py", "head": 2, "tail": 2=} -->
+<!-- {- import="src/syncspec/context.py",  head=2,  tail=2,  eof=True -} -->
 ```python
 from dataclasses import dataclass, field
 from typing import Any, Dict, List
@@ -57,7 +57,7 @@ class Context:
     export_path_prefix: str
     output_path_prefix: str
 ```
-<!-- {==} -->
+<!-- {--} -->
 
 Import `machine`.
 
@@ -72,25 +72,28 @@ def machine(context: Context) -> None:
 - Note that sys.exit(0) raises a SystemExit exception.
 - `logging.basicConfig()` only creates the file handler when a log message is actually written.
 
-<!-- {= "include": "package", "head": 1, "tail": 1 =} -->
+<!-- {-  include="package",  head=1,  tail=1 -} -->
 ## Package
 
 - The function is part of the python package `src/syncspec` .   
 - Imports from the package take the form `from syncspec.x import X`.
 - Assume Python version 3.9.
-<!-- {==} -->
 
-<!-- {= "include": "generate_tests", "head": 1, "tail": 1 =} -->
+<!-- {--} -->
+
+<!-- {-  include="generate_tests",  head=1,  tail=1 -} -->
 ## Write pytests to verify the functionality
 
 - Write tests in a separate file.
 - Tests should be individual functions. Do not define a test class.    
 - Use `@pytest.mark.parametrize` to create concise tests.  
-<!-- {==} -->
 
-<!-- {= "include": "explain_the_solution", "head": 1, "tail": 1 =} -->
+<!-- {--} -->
+
+<!-- {-  include="explain_the_solution",  head=1,  tail=1 -} -->
 ## Explain the solution  
 
 - Describe any logical inconsistencies in the function specification and suggest improvements. 
 - Describe any assumptions that are not explicitly stated in this function specification.
-<!-- {==} -->
+
+<!-- {--} -->

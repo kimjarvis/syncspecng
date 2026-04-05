@@ -2,7 +2,7 @@
 
 Import `Context` from file `context.py`
 
-<!-- {="import": "src/syncspec/context.py", "head": 2, "tail": 2=} -->
+<!-- {- import="src/syncspec/context.py",  head=2,  tail=2 ,  eof=True -} -->
 ```python
 from dataclasses import dataclass, field
 from typing import Any, Dict, List
@@ -19,10 +19,10 @@ class Context:
     export_path_prefix: str
     output_path_prefix: str
 ```
-<!-- {==} -->
+<!-- {--} -->
 
 
-<!-- {="import": "src/syncspec/directive.py", "head": 2, "tail": 2=} -->
+<!-- {- import="src/syncspec/directive.py",  head=2,  tail=2,  eof=True -} -->
 ```python
 from dataclasses import dataclass
 from pathlib import Path
@@ -38,10 +38,10 @@ class Directive:
     text_line_number: int
     suffix_line_number: int
 ```
-<!-- {==} -->
+<!-- {--} -->
 
 
-<!-- {="import": "src/syncspec/stop.py", "head": 2, "tail": 2=} -->
+<!-- {- import="src/syncspec/stop.py",  head=2,  tail=2,  eof=True -} -->
 ```python
 from dataclasses import dataclass
 
@@ -50,7 +50,7 @@ class Stop:
     pass
 
 ```
-<!-- {==} -->
+<!-- {--} -->
 
 ## Implement a unary function
 
@@ -58,13 +58,13 @@ In the file `src/syncspec/import_directive.py`.
 
 Define a closure factory with a unary function with signature:
 
-<!-- {="source": "import_directive", "head": 2, "tail": 2=} -->
+<!-- {- source="import_directive",  head=1,  tail=1 -} -->
 ```python
 def make_import_directive(context: Context):
     def import_directive(directive: Directive) -> Union[Directive,Stop]:
 
 ```
-<!-- {==} -->
+<!-- {--} -->
 
 - If dictionary `directive.parameters` contains the key "import" then:
 	- Note that the value of `directive.parameters["import"]` is a file path relative to the directory path `Context.import_path_prefix`.  
@@ -98,7 +98,7 @@ def make_import_directive(context: Context):
 		- Return an object of type `Stop`.  
 - Otherwise, return the `Directive` object.
 
-<!-- {= "include": "format_error", "head": 1, "tail": 1 =} -->
+<!-- {-  include="format_error",  head=1,  tail=1 -} -->
 ## Log warnings and errors
 
 Import logging.
@@ -108,27 +108,31 @@ Import the function with this signature from file `utilities.py`:
 from pathlib import Path
 def format_error(message: str, path: Path, line_number: int) -> str:
 ```
-<!-- {==} -->
 
-<!-- {= "include": "package", "head": 1, "tail": 1 =} -->
+<!-- {--} -->
+
+<!-- {-  include="package",  head=1,  tail=1 -} -->
 ## Package
 
 - The function is part of the python package `src/syncspec` .   
 - Imports from the package take the form `from syncspec.x import X`.
 - Assume Python version 3.9.
-<!-- {==} -->
 
-<!-- {= "include": "generate_tests", "head": 1, "tail": 1 =} -->
+<!-- {--} -->
+
+<!-- {-  include="generate_tests",  head=1,  tail=1 -} -->
 ## Write pytests to verify the functionality
 
 - Write tests in a separate file.
 - Tests should be individual functions. Do not define a test class.    
 - Use `@pytest.mark.parametrize` to create concise tests.  
-<!-- {==} -->
 
-<!-- {= "include": "explain_the_solution", "head": 1, "tail": 1 =} -->
+<!-- {--} -->
+
+<!-- {-  include="explain_the_solution",  head=1,  tail=1 -} -->
 ## Explain the solution  
 
 - Describe any logical inconsistencies in the function specification and suggest improvements. 
 - Describe any assumptions that are not explicitly stated in this function specification.
-<!-- {==} -->
+
+<!-- {--} -->

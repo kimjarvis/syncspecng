@@ -48,29 +48,29 @@ from typing import get_type_hints
 
 For type-specific rules, use named functions with explicit type hints rather than lambdas.
 
-<!-- {= "source": "package", "head": 1, "tail": 1 =} -->
+<!-- {-  source="package",  head=1,  tail=1 -} -->
 ## Package
 
 - The function is part of the python package `src/syncspec` .   
 - Imports from the package take the form `from syncspec.x import X`.
 - Assume Python version 3.9.
 
-<!-- {==} -->
+<!-- {--} -->
 
 
-<!-- {= "source": "generate_tests", "head": 1, "tail": 1 =} -->
+<!-- {-  source="generate_tests",  head=1,  tail=1 -} -->
 ## Write pytests to verify the functionality
 
 - Write tests in a separate file.
 - Tests should be individual functions. Do not define a test class.    
 - Use `@pytest.mark.parametrize` to create concise tests.  
 
-<!-- {==} -->
+<!-- {--} -->
 
-<!-- {= "source": "explain_the_solution", "head": 1, "tail": 1 =} -->
+<!-- {-  source="explain_the_solution",  head=1,  tail=1 -} -->
 ## Explain the solution  
 
 - Describe any logical inconsistencies in the function specification and suggest improvements. 
 - Describe any assumptions that are not explicitly stated in this function specification.
 
-<!-- {==} -->
+<!-- {--} -->
