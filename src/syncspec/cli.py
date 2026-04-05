@@ -3,121 +3,83 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 from syncspec.context import Context
 from syncspec.machine import machine
 
 
-def error_exit(msg: str) -> None:
-    sys.stderr.write(f"Error: {msg}\n")
-    sys.exit(1)
-
-
-def validate_path(path_str: str, must_exist: bool, is_dir: bool, suffix: Optional[str] = None) -> None:
-    p = Path(path_str)
-    if suffix and not p.name.endswith(suffix):
-        error_exit(f"{path_str} must have suffix {suffix}")
-    if must_exist:
-        if is_dir and not p.is_dir():
-            error_exit(f"{path_str} is not a valid directory")
-        if not is_dir and not p.is_file():
-            error_exit(f"{path_str} is not a valid file")
-    elif not p.parent.is_dir():
-        error_exit(f"Parent directory for {path_str} does not exist")
-
-
-def parse_args() -> argparse.Namespace:
+def main(cli_args: Optional[List[str]] = None) -> None:
     parser = argparse.ArgumentParser(
-        description="SyncSpec CLI - Process templates with key-value substitutions"
+        description="Process input files with custom delimiters and key-value mappings."
     )
-    parser.add_argument(
-        "input_path",
-        help="Existing directory path containing input files"
-    )
-    parser.add_argument(
-        "keyvalue_file",
-        help="Existing JSON file path containing key-value pairs for substitution"
-    )
-    parser.add_argument(
-        "--open_delimiter",
-        default="{{",
-        help="Opening delimiter for template variables (default: '{{')"
-    )
-    parser.add_argument(
-        "--close_delimiter",
-        default="}}",
-        help="Closing delimiter for template variables (default: '}}')"
-    )
-    parser.add_argument(
-        "--log_file",
-        help="Path to log file (must have .log suffix). Logs to console if not specified."
-    )
-    parser.add_argument(
-        "--output_path_prefix",
-        help="Existing directory path for output files. Defaults to input_path if not specified."
-    )
-    parser.add_argument(
-        "--import_path_prefix",
-        help="Existing directory path for import files. Defaults to input_path if not specified."
-    )
-    parser.add_argument(
-        "--export_path_prefix",
-        help="Existing directory path for export files. Defaults to input_path if not specified."
-    )
-    return parser.parse_args()
+    parser.add_argument("--open_delimiter", default="{{", help="Opening delimiter")
+    parser.add_argument("--close_delimiter", default="}}", help="Closing delimiter")
+    parser.add_argument("--log_file", default=None, help="Log file path (must end with .log)")
+    parser.add_argument("input_path", help="Path to the input directory")
+    parser.add_argument("keyvalue_file", nargs="?", default=None, help="Optional JSON file (must exist, end with .json)")
 
+    args = parser.parse_args(cli_args)
 
-def main() -> None:
-    args = parse_args()
+    # 1. Validate input_path
+    input_path = Path(args.input_path)
+    if not input_path.is_dir():
+        print(f"Error: input_path '{input_path}' is not a valid directory.", file=sys.stderr)
+        sys.exit(1)
 
-    validate_path(args.input_path, must_exist=True, is_dir=True)
-    validate_path(args.keyvalue_file, must_exist=True, is_dir=False, suffix=".json")
+    # 2. Validate --log_file
+    if args.log_file is not None:
+        log_path = Path(args.log_file)
+        if log_path.suffix.lower() != ".log":
+            print(f"Error: --log_file must have a '.log' suffix, got '{log_path.suffix}'.", file=sys.stderr)
+            sys.exit(1)
 
-    try:
-        with open(args.keyvalue_file) as f:
-            keyvalue = json.load(f)
-    except json.JSONDecodeError:
-        error_exit(f"Invalid JSON in {args.keyvalue_file}")
+    # 3. Read & validate keyvalue_file
+    keyvalue = {}
+    if args.keyvalue_file is not None:
+        kv_path = Path(args.keyvalue_file)
+        if kv_path.suffix.lower() != ".json":
+            print(f"Error: keyvalue_file must have a '.json' suffix, got '{kv_path.suffix}'.", file=sys.stderr)
+            sys.exit(1)
+        if not kv_path.is_file():
+            print(f"Error: keyvalue_file '{kv_path}' does not exist.", file=sys.stderr)
+            sys.exit(1)
 
+        try:
+            with open(kv_path, "r", encoding="utf-8") as f:
+                keyvalue = json.load(f)
+            if not isinstance(keyvalue, dict):
+                raise ValueError("JSON root must be a dictionary.")
+        except (json.JSONDecodeError, ValueError, OSError) as e:
+            print(f"Error: Failed to read/validate JSON '{kv_path}': {e}", file=sys.stderr)
+            sys.exit(1)
+
+    # 4. Configure Logging
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
+
+    log_format = "%(levelname)s - %(message)s"
     if args.log_file:
-        validate_path(args.log_file, must_exist=False, is_dir=False, suffix=".log")
+        logging.basicConfig(filename=args.log_file, level=logging.WARNING, format=log_format)
+    else:
+        logging.basicConfig(level=logging.WARNING, format=log_format)
 
-    for path in [args.output_path_prefix, args.import_path_prefix, args.export_path_prefix]:
-        if path:
-            validate_path(path, must_exist=True, is_dir=True)
-
-    # Clear existing handlers to ensure basicConfig works
-    logging.root.handlers = []
-
-    log_config = {
-        "level": logging.WARNING,
-        "format": "%(levelname)s - %(message)s",
-    }
-    if args.log_file:
-        log_config["filename"] = args.log_file
-    logging.basicConfig(**log_config)
-
-    # Emit a log message to ensure file handler is initialized
     logging.warning("CLI started")
 
-    output_prefix = args.output_path_prefix or args.input_path
-    import_prefix = args.import_path_prefix or args.input_path
-    export_prefix = args.export_path_prefix or args.input_path
-
+    # 5. Create Context
     context = Context(
         open_delimiter=args.open_delimiter,
         close_delimiter=args.close_delimiter,
         keyvalue_file=args.keyvalue_file,
         keyvalue=keyvalue,
-        input_path=args.input_path,
-        import_path_prefix=import_prefix,
-        export_path_prefix=export_prefix,
-        output_path_prefix=output_prefix,
+        input_path=str(input_path),
+        import_path_prefix=None,
+        export_path_prefix=None,
+        output_path_prefix=None,
     )
 
+    # 6. Execute
     machine(context)
-    sys.exit(0)
 
 
 if __name__ == "__main__":

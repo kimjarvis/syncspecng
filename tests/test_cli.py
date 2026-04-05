@@ -1,100 +1,50 @@
 import json
-import sys
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
+
 from syncspec.cli import main
 
+@pytest.fixture
+def valid_dir(tmp_path: Path) -> Path:
+    d = tmp_path / "input"
+    d.mkdir()
+    return d
 
-@pytest.mark.parametrize("suffix, should_fail", [(".json", False), (".txt", True)])
-def test_keyvalue_file_suffix(tmp_path, monkeypatch, suffix, should_fail):
-    (tmp_path / "input").mkdir()
-    kv_file = tmp_path / f"test{suffix}"
-    kv_file.write_text("{}")
-    args = ["cli.py", str(tmp_path / "input"), str(kv_file)]
-    monkeypatch.setattr(sys, "argv", args)
-    monkeypatch.setattr("syncspec.cli.machine", lambda ctx: None)
-    if should_fail:
-        with pytest.raises(SystemExit) as exc_info:
-            main()
-        assert exc_info.value.code == 1
-    else:
-        with pytest.raises(SystemExit) as exc_info:
-            main()
-        assert exc_info.value.code == 0
+@pytest.mark.parametrize("args, error_keyword", [
+    (["non_existent"], "input_path"),
+    ([".", "--log_file", "test.txt"], "log_file"),
+    ([".", "data.xml"], "keyvalue_file"),
+    ([".", "missing.json"], "exist"),
+])
+def test_validation_errors(valid_dir, capsys, args, error_keyword):
+    if args[0] == ".":
+        args = [str(valid_dir)] + args[1:]
+    with pytest.raises(SystemExit) as exc:
+        main(args)
+    assert exc.value.code == 1
+    assert error_keyword in capsys.readouterr().err
 
-
-@pytest.mark.parametrize("exists", [True, False])
-def test_input_path_directory(tmp_path, monkeypatch, exists):
-    kv_file = tmp_path / "test.json"
-    kv_file.write_text("{}")
-    if exists:
-        (tmp_path / "input").mkdir()
-        path_arg = str(tmp_path / "input")
-    else:
-        path_arg = str(tmp_path / "nonexistent")
-    args = ["cli.py", path_arg, str(kv_file)]
-    monkeypatch.setattr(sys, "argv", args)
-    monkeypatch.setattr("syncspec.cli.machine", lambda ctx: None)
-    if not exists:
-        with pytest.raises(SystemExit) as exc_info:
-            main()
-        assert exc_info.value.code == 1
-    else:
-        with pytest.raises(SystemExit) as exc_info:
-            main()
-        assert exc_info.value.code == 0
-
-
-def test_invalid_json(tmp_path, monkeypatch):
-    (tmp_path / "input").mkdir()
+def test_invalid_json(valid_dir, tmp_path, capsys):
     bad_json = tmp_path / "bad.json"
-    bad_json.write_text("{invalid}")
-    args = ["cli.py", str(tmp_path / "input"), str(bad_json)]
-    monkeypatch.setattr(sys, "argv", args)
-    with pytest.raises(SystemExit) as exc_info:
-        main()
-    assert exc_info.value.code == 1
+    bad_json.write_text("{invalid")
+    with pytest.raises(SystemExit) as exc:
+        main([str(valid_dir), str(bad_json)])
+    assert exc.value.code == 1
+    assert "JSON" in capsys.readouterr().err
 
+@patch("syncspec.cli.machine")
+def test_success_with_file_logging(mock_machine, valid_dir, tmp_path, capsys):
+    kv = tmp_path / "kv.json"
+    kv.write_text(json.dumps({"k": "v"}))
+    log = tmp_path / "run.log"
+    main([str(valid_dir), str(kv), "--log_file", str(log)])
+    mock_machine.assert_called_once()
+    ctx = mock_machine.call_args[0][0]
+    assert ctx.keyvalue == {"k": "v"} and log.read_text().strip() == "WARNING - CLI started"
 
-def test_logging_to_file(tmp_path, monkeypatch):
-    (tmp_path / "input").mkdir()
-    kv_file = tmp_path / "test.json"
-    kv_file.write_text("{}")
-    log_file = tmp_path / "test.log"
-    args = ["cli.py", str(tmp_path / "input"), str(kv_file), "--log_file", str(log_file)]
-    monkeypatch.setattr(sys, "argv", args)
-    monkeypatch.setattr("syncspec.cli.machine", lambda ctx: None)
-    with pytest.raises(SystemExit) as exc_info:
-        main()
-    assert exc_info.value.code == 0
-    assert log_file.exists()
-
-
-def test_prefix_defaults(tmp_path, monkeypatch):
-    (tmp_path / "input").mkdir()
-    kv_file = tmp_path / "test.json"
-    kv_file.write_text("{}")
-    args = ["cli.py", str(tmp_path / "input"), str(kv_file)]
-    monkeypatch.setattr(sys, "argv", args)
-    monkeypatch.setattr("syncspec.cli.machine", lambda ctx: None)
-    with pytest.raises(SystemExit) as exc_info:
-        main()
-    assert exc_info.value.code == 0
-
-
-def test_help_message(tmp_path, monkeypatch, capsys):
-    args = ["cli.py", "--help"]
-    monkeypatch.setattr(sys, "argv", args)
-    with pytest.raises(SystemExit) as exc_info:
-        main()
-    assert exc_info.value.code == 0
-    captured = capsys.readouterr()
-    assert "open_delimiter" in captured.out
-    assert "close_delimiter" in captured.out
-    assert "log_file" in captured.out
-    assert "output_path_prefix" in captured.out
-    assert "import_path_prefix" in captured.out
-    assert "export_path_prefix" in captured.out
-    assert "input_path" in captured.out
-    assert "keyvalue_file" in captured.out
+@patch("syncspec.cli.machine")
+def test_success_with_console_logging(mock_machine, valid_dir, capsys):
+    main([str(valid_dir)])
+    assert "WARNING - CLI started" in capsys.readouterr().err

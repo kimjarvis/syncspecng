@@ -3,19 +3,19 @@
 Implement a command line interface.  
 ### Parameters
 
-Parse keyword parameters
+Parse optional keyword parameters
 
-`--open_delimiter` with default "{{".
-`--close_delimiter` with default "}}".
+`--open_delimiter` with default "{{".  Describe the default value.
+`--close_delimiter` with default "}}". Describe the default value.
 `--log_file` if specified, this must be a valid file path.  The file suffix must be `.log`.  
-`--output_path_prefix` if specified, this must be a path to an existing directory.  
-`--import_path_prefix` if specified, this must be a path to an existing directory.
-`--export_path_prefix` if specified, this must be a path to an existing directory.
 
-Required positional parameters:
+Required positional parameter:
 
 1. `input_path`  this must be a valid directory path.
-2. `keyvalue_file` the file must exist and the file suffix must be `.json`.  
+
+Optional  positional parameter:
+
+2. `keyvalue_file`, if specified the file must exist and the file suffix must be `.json`.  
 
 If verification fails, print an informative message to  `sys.stderr`  and `sys.exit(1)`.
 
@@ -29,17 +29,20 @@ Use `argsparse`.  The `--help` message shall print an explanation of the paramet
 Clear any existing handlers, ensuring `basicConfig()` will create a new file handler when --`log_file` is specified.   Write an initial log message `logging.warning("CLI started")`  to guarantees the log file is created and written.
 ### Read JSON file
 
-Read the JSON file  `keyvalue_file`  into a dictionary `keyvalue`.  
-
-If JSON validation fails, print an informative message to  `sys.stderr`  and `sys.exit(1)`.
+If the `keyvalue_file` parameter is specified:
+- Read the JSON file  `keyvalue_file`  into a dictionary `keyvalue`.  
+- If JSON validation fails: 
+	- print an informative message to  `sys.stderr`  and `sys.exit(1)`.
 ### Create Context
 
 Create an object from the parameter values.
 
-If `--output_path_prefix` is not specified set equal to `input_path`
-If `--import_path_prefix` is not specified set equal to `input_path`
-If `--export_path_prefix` is not specified set equal to `input_path`
- 
+- `output_path_prefix` shall be None
+- `import_path_prefix` shall be None
+- `export_path_prefix` shall be None
+- If the `--keyvalue_file` parameter is not specified:
+	- Set `keyvalue` to an empty dictionary,
+	 
 <!-- {- import="src/syncspec/context.py",  head=2,  tail=2,  eof=True -} -->
 ```python
 from dataclasses import dataclass, field
@@ -66,10 +69,9 @@ Call function with signature
 ```python
 def machine(context: Context) -> None:
 ```
-
 ### Note 
 
-- Note that sys.exit(0) raises a SystemExit exception.
+- Note that `sys.exit(0)` raises a `SystemExit` exception.
 - `logging.basicConfig()` only creates the file handler when a log message is actually written.
 
 <!-- {-  include="package",  head=1,  tail=1 -} -->
