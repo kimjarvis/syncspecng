@@ -40,6 +40,18 @@ class Directive:
 ```
 <!-- {==} -->
 
+
+<!-- {="import": "src/syncspec/stop.py", "head": 2, "tail": 2=} -->
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Stop:
+    pass
+
+```
+<!-- {==} -->
+
 ## Implement a unary function
 
 In the file `src/syncspec/source_directive.py`.
@@ -56,12 +68,41 @@ def make_source_directive(context: Context):
 
 - If dictionary `directive.parameters` contains the key "source" then:
 	- The value shall be called the `key`.
-	- Add the `key` to the `context.keyvalue` dictionary with value `directive.text`.
+	- If dictionary `directive.parameters` contains the key "eof" then:
+		- Ensure that:
+			- The value is an boolean call it `eof`.
+	- Otherwise, `eof=False`.
+	- If dictionary `directive.parameters` contains the key "head" then:
+		- Ensure that:
+			- The value is an integer call it `head`.
+	- Otherwise, `head=0`
+	- If dictionary `directive.parameters` contains the key "tail" then:
+		- Ensure that:
+			- The value is an integer call it `tail`.
+	- Otherwise, `tail=0`
+	- Ensure that `head + tail` lines could be removed from `Directive.text`, an result is allowed.
+	- Copy `Directive.text` to variable `output`
+	- Ensure that:
+		-  `head + tail <=`  the number of lines in variable `output` .
+	- Trim the first `head` lines and the last `tail` lines from variable  `output` 
+	- If `eof` is True then add an end of line, `\n`,  character to the end of variable `output`.
+	- Add the `key` to the `context.keyvalue` dictionary with value equal to the variable `output`.
 	- If the `key` is already present in the dictionary then:
-		-  overwrite the value.
-		- Log a warning with an informative message using `format_error.
+		- Overwrite the value.
+		- Log a warning with an informative message using `format_error`.
+		- Use the `prefix_line_number`.
 	- Return the `Directive` object.
+	- When any of the ensured conditions are violated:
+		- Log an error with an informative message using `format_error`.
+		- Use the `prefix_line_number`.
+		- Return an object of type `Stop` . 
 - Otherwise, return the `Directive` object.
+
+Assume that:
+
+- Directive.text uses standard newline characters. `splitlines(keepends=True)` safely handles `\n, \r\n, and \r`.
+- `context.keyvalue` is a standard mutable dictionary.
+- `format_error` is purely for message formatting; actual logging is handled via logging.
 
 <!-- {= "include": "format_error", "head": 1, "tail": 1 =} -->
 ## Log warnings and errors

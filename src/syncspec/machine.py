@@ -48,4 +48,5 @@ def machine(context: Context) -> None:
     initial_facts = [Dummy()]
     final_facts = production(initial_facts, rules)
     print("debug 00",final_facts)
+    print("debug 01", context.keyvalue)
     pass

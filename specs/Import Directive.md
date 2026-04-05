@@ -91,7 +91,7 @@ def make_import_directive(context: Context):
 	- Ensure that `head + tail` lines could be removed from `Directive.text`, an result is allowed.
 	- Call the first `head` lines from  `Directive.text` `top`
 	- Call the last `tail` lines from   `Directive.text` `bottom`
-	- Replace the `Directive.text` with the concatenation `top + in + bottom`.  
+	- Replace the `Directive.text` with the concatenation `top + input + bottom`.  
 	- Return the modified `Directive` object.
 	- When any of the ensured conditions are violated:
 		- Log an error with an informative message using `format_error.
