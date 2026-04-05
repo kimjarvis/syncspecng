@@ -87,7 +87,7 @@ Define a closure factory with a unary function with signature:
 ```python
 def make_create_blocks(context: Context):
     state = {'block': None, 'last': False}
-    def create_blocks(fragment: IndexedFragment) -> Union[Text,Tuple[Text,Block],Stop,None]:
+    def create_blocks(fragment: IndexedFragment) -> Union[Text,Tuple[Block,Text],Stop,None]:
 
 ```
 <!-- {==} -->
@@ -102,9 +102,9 @@ def make_create_blocks(context: Context):
 		- Return an object of type `Text`, copy fields from `IndexedFragment`.
 	- Otherwise:
 		- If `IndexedFragment.index` modulo 4 equals 0:
-			- Return a tuple `Tuple[Text,Block]`.  With an object of type `Text`, copy fields from `IndexedFragment` and an object of type Block which shall be `state["block"]` .
+			- Return a tuple `Tuple[Block,Text]`.  With an object of type `Text`, copy fields from `IndexedFragment` and an object of type Block which shall be `state["block"]` .
 		- If `IndexedFragment.index` modulo 4 equals 1: 
-			- Create an object `state["block"]=Block()`.
+			- Create an object of type `Block` and set `state["block"]` 
 			- `state["block"].prefix=IndexedFragment.text`
 			- `state["block"].prefix_line_number=IndexedFragment.line_number`
 			- `state["block"].path=IndexedFragment.path`
