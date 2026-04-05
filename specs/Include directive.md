@@ -85,13 +85,16 @@ def make_include_directive(context: Context):
 		- Ensure that:
 			- The value is an integer call it `tail`.
 	- Otherwise, `tail=0`
-	- Ensure that `head + tail` lines could be removed from `Directive.text`, an result is allowed.
+	- Ensure that:
+		- `head + tail <=`  the number of lines in  `Directive.text`.
 	- Call the first `head` lines from  `Directive.text` `top`
 	- Call the last `tail` lines from   `Directive.text` `bottom`
-	- Replace the `Directive.text` with the concatenation `top + in + bottom`.  
-	- Return the modified `Directive` object.
+	- Return a `Directive` object:
+		- Copy fields from `directive`
+		- Set `Directive.text` to be the concatenation `top + input + bottom`.  
 	- When any of the ensured conditions are violated:
 		- Log an error with an informative message using `format_error.
+		- Use the `prefix_line_number`.
 		- Return an object of type `Stop`.  
 - Otherwise, return the `Directive` object.
 

@@ -97,6 +97,16 @@ from pathlib import Path
 def format_error(message: str, path: Path, line_number: int) -> str:
 ```
 
+Raise a `ValueError` exception then catch the exception and log a warning or error.
+
+Example:
+
+```python
+        except Exception as e:
+            logging.error(format_error(str(e), path, line_number))
+            return Stop()
+```
+
 <!-- {--} -->
 
 <!-- {-  include="package",  head=1,  tail=1 -} -->

@@ -67,9 +67,9 @@ def make_import_directive(context: Context):
 <!-- {--} -->
 
 - If dictionary `directive.parameters` contains the key "import" then:
-	- Note that the value of `directive.parameters["import"]` is a file path relative to the directory path `Context.import_path_prefix`.  
+	- Note that the value of `directive.parameters["import"]` is a file path relative to the directory path `Context.input_path`.  
 	- Ensure that:  
-		- The file must be in directory `Context.import_path_prefix` or one of its sub-directories.  Accessing a parent directory is not allowed.
+		- The file must be in directory `Context.input_path` or one of its sub-directories.  Accessing a parent directory is not allowed.
 		- If the file is a symbolic link then the link target must also be in the directory or one of its sub-directories.  Accessing a parent directory is not allowed.
 		- The file must exist.
 		- The file must be a text file.
@@ -88,13 +88,16 @@ def make_import_directive(context: Context):
 		- Ensure that:
 			- The value is an integer call it `tail`.
 	- Otherwise, `tail=0`
-	- Ensure that `head + tail` lines could be removed from `Directive.text`, an result is allowed.
+	- Ensure that:
+		- `head + tail <=`  the number of lines in  `Directive.text`.
 	- Call the first `head` lines from  `Directive.text` `top`
 	- Call the last `tail` lines from   `Directive.text` `bottom`
-	- Replace the `Directive.text` with the concatenation `top + input + bottom`.  
-	- Return the modified `Directive` object.
+	- Return a `Directive` object:
+		- Copy fields from `directive`
+		- Set `Directive.text` to be the concatenation `top + input + bottom`.  
 	- When any of the ensured conditions are violated:
 		- Log an error with an informative message using `format_error.
+		- Use the `prefix_line_number`.
 		- Return an object of type `Stop`.  
 - Otherwise, return the `Directive` object.
 
@@ -107,6 +110,16 @@ Import the function with this signature from file `utilities.py`:
 ```python
 from pathlib import Path
 def format_error(message: str, path: Path, line_number: int) -> str:
+```
+
+Raise a `ValueError` exception then catch the exception and log a warning or error.
+
+Example:
+
+```python
+        except Exception as e:
+            logging.error(format_error(str(e), path, line_number))
+            return Stop()
 ```
 
 <!-- {--} -->
